@@ -1,10 +1,9 @@
 "use client";
 
 import { useFieldArray, useForm } from "react-hook-form";
-
-type Emails = {
-  emails: { email: string }[];
-};
+import { User } from "./types/user";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { schema } from "./schemas/user";
 
 function EmailArrayForm() {
   const {
@@ -12,27 +11,31 @@ function EmailArrayForm() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<Emails>();
+  } = useForm<User>({ resolver: zodResolver(schema) });
   const { fields, append, remove } = useFieldArray({ control, name: "emails" });
 
-  const onSubmit = (data: Emails) => console.log(JSON.stringify(data));
+  const onSubmit = (data: User) => console.log(data);
 
   return (
     <form
       className="flex flex-col gap-4 max-w-md mx-auto p-4 border rounded-lg"
       onSubmit={handleSubmit(onSubmit)}
     >
+      <input
+        {...register("name")}
+        type="text"
+        placeholder={"name"}
+        className="border p-2 rounded w-full"
+      />
+      {errors.name && (
+        <p className="text-red-500 text-sm">{errors.name.message}</p>
+      )}
+
       {fields.map((field, index) => (
-        <div key={field.id}>
+        <div key={field.id} className="space-y-2">
           <div className="flex items-center justify-between gap-2">
             <input
-              {...register(`emails.${index}.email`, {
-                required: "Campo obrigatório.",
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Email inválido.",
-                },
-              })}
+              {...register(`emails.${index}.email`)}
               type="email"
               placeholder={`0${index + 1} email`}
               className="border p-2 rounded w-full"
@@ -47,7 +50,7 @@ function EmailArrayForm() {
           </div>
           {errors.emails?.[index]?.email && (
             <p className="text-red-500 text-sm">
-              {errors.emails?.[index]?.email.message}
+              {errors.emails?.[index].email.message}
             </p>
           )}
         </div>
@@ -59,6 +62,9 @@ function EmailArrayForm() {
       >
         Add email
       </button>
+      {errors.emails && (
+        <p className="text-red-500 text-sm">{errors.emails.message}</p>
+      )}
       <button
         className="bg-blue-500 text-white py-2 px-4 rounded"
         type="submit"
